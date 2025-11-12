@@ -1,12 +1,32 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#000">
+  <link rel="manifest" href="manifest.json">
+  <meta name="screen-orientation" content="landscape">
+  <meta name="x5-orientation" content="landscape">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
   <title>Work Timer</title>
   <style>
-    :root { --bg: #000; --fg: #fff; --muted: #9aa0a6; --accent: #67C7ED; }
-    html, body { height: 100%; margin: 0; padding: 0; }
+    :root {
+      --bg: #000;
+      --fg: #fff;
+      --muted: #9aa0a6;
+      --accent: #67C7ED;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       background: linear-gradient(180deg, #000 0%, #070707 100%);
       color: var(--fg);
@@ -43,7 +63,7 @@
       height: 100%;
       padding: 20px;
       box-sizing: border-box;
-      background: rgba(255,255,255,0.03);
+      background: rgba(255, 255, 255, 0.03);
       border-radius: 0;
     }
 
@@ -52,13 +72,19 @@
       font-weight: 900;
       line-height: 1;
       color: var(--fg);
-      text-shadow: 0 6px 30px rgba(0,0,0,0.8);
+      text-shadow: 0 6px 30px rgba(0, 0, 0, 0.8);
       margin: 10px 0;
     }
 
-    .label { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+    .label {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
 
-    .set-area, .controls, .quick {
+    .set-area,
+    .controls,
+    .quick {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -67,42 +93,112 @@
       margin-top: 10px;
     }
 
-    button, input[type=number] {
+    button,
+    input[type=number] {
       background: #111;
       color: var(--fg);
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       padding: 10px 14px;
       border-radius: 8px;
       font-weight: 700;
       cursor: pointer;
     }
 
-    button.primary { background: var(--accent); color: #010101; border: none; }
-    button.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.06); }
+    button.primary {
+      background: var(--accent);
+      color: #010101;
+      border: none;
+    }
 
-    .meta { color: var(--muted); font-size: 13px; text-align: center; margin-top: 10px; }
+    button.ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      margin-top: 10px;
+    }
 
     /* Landscape Mobile: Fullscreen, vertical stacking */
     @media (max-width: 900px) and (orientation: landscape) {
-      html, body { height: 100vh; overflow: hidden; }
-      .card, .clock { height: 100vh; width: 100vw; border-radius: 0; }
-      .clock { flex-direction: column; justify-content: space-evenly; }
-      .time { font-size: clamp(48px, 18vw, 140px); }
-      .set-area, .controls, .quick { flex-direction: column; gap: 14px; }
-      button, input[type=number] { font-size: 16px; }
+
+      html,
+      body {
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .card,
+      .clock {
+        height: 100vh;
+        width: 100vw;
+        border-radius: 0;
+      }
+
+      .clock {
+        flex-direction: column;
+        justify-content: space-evenly;
+      }
+
+      .time {
+        font-size: clamp(48px, 18vw, 140px);
+      }
+
+      .set-area,
+      .controls,
+      .quick {
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      button,
+      input[type=number] {
+        font-size: 16px;
+      }
     }
 
     /* Portrait Mobile */
     @media (max-width: 600px) and (orientation: portrait) {
-      html, body { height: 100vh; overflow: hidden; }
-      .card, .clock { height: 100vh; width: 100vw; border-radius: 0; }
-      .clock { justify-content: space-evenly; }
-      .time { font-size: clamp(48px, 20vw, 120px); }
-      .set-area, .controls, .quick { flex-direction: column; gap: 12px; }
-      button, input[type=number] { font-size: 16px; }
+
+      html,
+      body {
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .card,
+      .clock {
+        height: 100vh;
+        width: 100vw;
+        border-radius: 0;
+      }
+
+      .clock {
+        justify-content: space-evenly;
+      }
+
+      .time {
+        font-size: clamp(48px, 20vw, 120px);
+      }
+
+      .set-area,
+      .controls,
+      .quick {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      button,
+      input[type=number] {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
+
 <body>
   <main class="card">
     <div class="clock" aria-live="polite">
@@ -149,9 +245,9 @@
 
     function fmt(s) {
       s = Math.max(0, Math.floor(s));
-      const hh = String(Math.floor(s/3600)).padStart(2,'0');
-      const mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
-      const ss = String(s%60).padStart(2,'0');
+      const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+      const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+      const ss = String(s % 60).padStart(2, '0');
       return `${hh}:${mm}:${ss}`;
     }
 
@@ -163,7 +259,7 @@
     function setDurationFromInputs() {
       const h = parseInt(hoursInput.value) || 0;
       const m = parseInt(minutesInput.value) || 0;
-      duration = h*3600 + m*60;
+      duration = h * 3600 + m * 60;
       remaining = duration;
       render();
     }
@@ -233,7 +329,7 @@
         g.connect(ctx.destination);
         o.start();
         setTimeout(() => { o.stop(); ctx.close(); }, 280);
-      } catch(e) {}
+      } catch (e) { }
     }
 
     (function init() { setDurationFromInputs(); render(); })();
@@ -244,4 +340,5 @@
     });
   </script>
 </body>
+
 </html>
