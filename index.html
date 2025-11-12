@@ -67,6 +67,33 @@
       border-radius: 0;
     }
 
+    .top-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+
+    .mode-badge {
+      font-weight: 800;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .switch-btn {
+      margin-left: 6px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--fg);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
     .time {
       font-size: clamp(48px, 14vw, 120px);
       font-weight: 900;
@@ -74,6 +101,7 @@
       color: var(--fg);
       text-shadow: 0 6px 30px rgba(0, 0, 0, 0.8);
       margin: 10px 0;
+      user-select: none;
     }
 
     .label {
@@ -158,6 +186,10 @@
       input[type=number] {
         font-size: 16px;
       }
+
+      .top-row {
+        justify-content: center;
+      }
     }
 
     /* Portrait Mobile */
@@ -195,6 +227,17 @@
       input[type=number] {
         font-size: 16px;
       }
+
+      .top-row {
+        justify-content: center;
+      }
+    }
+
+    /* Desktop: keep label and switch inline */
+    @media (min-width: 901px) {
+      .top-row {
+        justify-content: center;
+      }
     }
   </style>
 </head>
@@ -202,10 +245,15 @@
 <body>
   <main class="card">
     <div class="clock" aria-live="polite">
-      <p class="label">Work timer — set how many hours you worked and start the countdown</p>
+      <div class="top-row">
+        <div class="label mode-badge" id="modeLabel">Mode: <strong id="modeName">Countdown</strong></div>
+        <button id="switchMode" class="switch-btn ghost" title="Switch mode">Switch to Stopwatch</button>
+      </div>
+
       <div id="display" class="time">00:00:00</div>
 
-      <div class="set-area">
+      <!-- SET AREA (only for countdown) -->
+      <div class="set-area" id="countdownControls">
         <label style="color:var(--muted);font-weight:700;">Hours:</label>
         <input id="hours" type="number" min="0" max="999" value="1" />
         <label style="color:var(--muted);font-weight:700;">Minutes:</label>
@@ -213,11 +261,12 @@
         <button id="setBtn" class="small ghost">Set</button>
       </div>
 
+      <!-- SHARED CONTROLS -->
       <div class="controls">
         <button id="startBtn" class="primary">Start</button>
         <button id="pauseBtn" class="ghost">Pause</button>
         <button id="resetBtn" class="ghost">Reset</button>
-        <div class="quick">
+        <div class="quick" id="quickButtons">
           <button id="add15" class="ghost small">+15m</button>
           <button id="add30" class="ghost small">+30m</button>
           <button id="add60" class="ghost small">+1h</button>
@@ -229,6 +278,7 @@
   </main>
 
   <script>
+    // Elements
     const display = document.getElementById('display');
     const hoursInput = document.getElementById('hours');
     const minutesInput = document.getElementById('minutes');
@@ -240,9 +290,53 @@
     const add30 = document.getElementById('add30');
     const add60 = document.getElementById('add60');
     const status = document.getElementById('status');
+    const switchModeBtn = document.getElementById('switchMode');
+    const modeName = document.getElementById('modeName');
+    const countdownControls = document.getElementById('countdownControls');
 
-    let duration = 0, remaining = 0, timer = null, running = false;
+    // State
+    let mode = 'countdown';
+    let duration = 0;
+    let remaining = 0;
+    let elapsed = 0;
+    let timer = null;
+    let running = false;
+    let lastTs = null;
 
+    // ---------- 🧠 Local Storage Helpers ----------
+    function saveState() {
+      const state = {
+        mode,
+        duration,
+        remaining,
+        elapsed,
+        running,
+        lastTs: running ? Date.now() : null
+      };
+      localStorage.setItem('workTimerState', JSON.stringify(state));
+    }
+
+    function loadState() {
+      const state = localStorage.getItem('workTimerState');
+      if (!state) return;
+      try {
+        const s = JSON.parse(state);
+        mode = s.mode || 'countdown';
+        duration = s.duration || 0;
+        remaining = s.remaining || 0;
+        elapsed = s.elapsed || 0;
+        running = false; // always pause on load for safety
+        lastTs = null;
+      } catch (e) {
+        console.error('Failed to load timer state:', e);
+      }
+    }
+
+    function clearState() {
+      localStorage.removeItem('workTimerState');
+    }
+
+    // Formatter
     function fmt(s) {
       s = Math.max(0, Math.floor(s));
       const hh = String(Math.floor(s / 3600)).padStart(2, '0');
@@ -252,8 +346,20 @@
     }
 
     function render() {
-      display.textContent = fmt(remaining);
-      status.textContent = !running && remaining === 0 ? 'Ready — set a duration and press Start.' : running ? 'Running...' : 'Paused.';
+      if (mode === 'countdown') display.textContent = fmt(remaining);
+      else display.textContent = fmt(elapsed);
+
+      if (mode === 'countdown') {
+        status.textContent = !running && remaining === 0 ? 'Ready — set a duration and press Start.' : running ? 'Running (countdown)...' : 'Paused.';
+      } else {
+        status.textContent = !running && elapsed === 0 ? 'Stopwatch ready — press Start.' : running ? 'Running (stopwatch)...' : 'Paused.';
+      }
+      modeName.textContent = mode === 'countdown' ? 'Countdown' : 'Stopwatch';
+      switchModeBtn.textContent = mode === 'countdown' ? 'Switch to Stopwatch' : 'Switch to Countdown';
+      countdownControls.style.display = mode === 'countdown' ? 'flex' : 'none';
+      document.getElementById('quickButtons').style.display = mode === 'countdown' ? 'flex' : 'none';
+
+      saveState(); // 🧠 save after every render
     }
 
     function setDurationFromInputs() {
@@ -266,58 +372,86 @@
 
     setBtn.addEventListener('click', () => {
       setDurationFromInputs();
-      running = false;
-      clearInterval(timer);
-      timer = null;
+      pauseTimer();
     });
 
-    startBtn.addEventListener('click', () => {
-      if (remaining <= 0) {
-        setDurationFromInputs();
+    function startTimer() {
+      if (running) return;
+      if (mode === 'countdown') {
         if (remaining <= 0) {
-          status.textContent = 'Set a duration greater than 0.';
-          return;
+          setDurationFromInputs();
+          if (remaining <= 0) { status.textContent = 'Set a duration greater than 0.'; return; }
         }
       }
-      if (running) return;
       running = true;
-      status.textContent = 'Running...';
-      let last = Date.now();
-      timer = setInterval(() => {
-        const now = Date.now();
-        const dt = Math.round((now - last) / 1000);
-        if (dt > 0) {
-          remaining -= dt;
-          last = now;
-        }
-        if (remaining <= 0) {
-          remaining = 0; render();
-          clearInterval(timer); timer = null; running = false;
-          status.textContent = 'Done — timer reached zero.';
-          flashDone();
-        } else render();
-      }, 250);
-    });
+      lastTs = Date.now();
+      timer = setInterval(tick, 250);
+      render();
+    }
 
-    pauseBtn.addEventListener('click', () => { clearInterval(timer); timer = null; running = false; render(); });
-    resetBtn.addEventListener('click', () => { clearInterval(timer); timer = null; running = false; remaining = duration; render(); });
+    function pauseTimer() {
+      if (timer) { clearInterval(timer); timer = null; }
+      running = false;
+      lastTs = null;
+      render();
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      if (mode === 'countdown') {
+        remaining = duration;
+      } else {
+        elapsed = 0;
+      }
+      render();
+    }
+
+    function tick() {
+      const now = Date.now();
+      const dt = (now - lastTs) / 1000;
+      if (dt >= 0.5) {
+        const seconds = Math.floor(dt);
+        lastTs += seconds * 1000;
+        if (mode === 'countdown') {
+          remaining -= seconds;
+          if (remaining <= 0) {
+            remaining = 0;
+            doneBehavior();
+          }
+        } else {
+          elapsed += seconds;
+        }
+        render();
+      }
+    }
+
+    function doneBehavior() {
+      pauseTimer();
+      render();
+      status.textContent = 'Done — timer reached zero.';
+      flashDone();
+      notifyUser('Countdown finished');
+    }
+
+    // Quick adds
     add15.addEventListener('click', () => { remaining += 900; duration += 900; render(); });
     add30.addEventListener('click', () => { remaining += 1800; duration += 1800; render(); });
     add60.addEventListener('click', () => { remaining += 3600; duration += 3600; render(); });
 
-    function flashDone() {
-      const orig = display.style.color;
-      let t = 0;
-      const id = setInterval(() => {
-        display.style.color = t % 2 ? '#000' : '#fff';
-        display.style.background = t % 2 ? '#fff' : 'transparent';
-        t++;
-        if (t > 6) {
-          clearInterval(id);
-          display.style.color = orig;
-          display.style.background = 'transparent';
-        }
-      }, 180);
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+
+    switchModeBtn.addEventListener('click', () => {
+      pauseTimer();
+      mode = mode === 'countdown' ? 'stopwatch' : 'countdown';
+      if (mode === 'countdown' && duration === 0) setDurationFromInputs();
+      render();
+      notifyUser('Mode switched to ' + mode);
+    });
+
+    function notifyUser(text) {
+      if (navigator.vibrate) try { navigator.vibrate([60]); } catch (e) { }
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const o = ctx.createOscillator();
@@ -325,20 +459,50 @@
         o.type = 'sine';
         o.frequency.value = 880;
         g.gain.value = 0.02;
-        o.connect(g);
-        g.connect(ctx.destination);
+        o.connect(g); g.connect(ctx.destination);
         o.start();
-        setTimeout(() => { o.stop(); ctx.close(); }, 280);
+        setTimeout(() => { o.stop(); ctx.close(); }, 180);
       } catch (e) { }
     }
 
-    (function init() { setDurationFromInputs(); render(); })();
+    function flashDone() {
+      const origColor = display.style.color;
+      let t = 0;
+      const id = setInterval(() => {
+        display.style.color = t % 2 ? '#000' : '#fff';
+        display.style.background = t % 2 ? '#fff' : 'transparent';
+        t++;
+        if (t > 6) {
+          clearInterval(id);
+          display.style.color = origColor || '';
+          display.style.background = 'transparent';
+        }
+      }, 160);
+    }
+
+    // -------- Init --------
+    (function init() {
+      loadState(); // 🧠 load saved state first
+      render();
+
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => { });
+        }
+      } catch (e) { }
+    })();
+
+    // Keyboard shortcuts
     window.addEventListener('keydown', e => {
-      if (e.code === 'Space') { e.preventDefault(); if (running) pauseBtn.click(); else startBtn.click(); }
-      if (e.key === 'r' || e.key === 'R') resetBtn.click();
-      if (e.key === '+') add15.click();
+      if (e.code === 'Space') { e.preventDefault(); if (running) pauseTimer(); else startTimer(); }
+      if (e.key === 'r' || e.key === 'R') resetTimer();
+      if (e.key === '+') { if (mode === 'countdown') add15.click(); }
     });
+
+    // Save before unload (for accuracy)
+    window.addEventListener('beforeunload', saveState);
   </script>
+
 </body>
 
 </html>
