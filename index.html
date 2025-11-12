@@ -5,136 +5,111 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Work Timer</title>
   <style>
-    :root{--bg:#000;--fg:#fff;--muted:#9aa0a6;--accent:#67C7ED}
-    html,body{height:100%;margin:0;padding:0;}
-    body{
-      background:linear-gradient(180deg,#000 0%, #070707 100%);
-      color:var(--fg);
+    :root { --bg: #000; --fg: #fff; --muted: #9aa0a6; --accent: #67C7ED; }
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      background: linear-gradient(180deg, #000 0%, #070707 100%);
+      color: var(--fg);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      display:flex;align-items:center;justify-content:center;flex-direction:column;
-      padding:24px;
-      box-sizing:border-box;
-    }
-    .card{
-      width:min(880px,96%);
-      background:transparent;
-      text-align:center;
-      border-radius:14px;
-      padding:28px;
-      box-sizing:border-box;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
-    .clock{
-      font-weight:800;
-      color:var(--fg);
-      background:rgba(255,255,255,0.03);
-      padding:40px 30px;
-      border-radius:12px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      width:100%;
-      max-width:520px;
-      box-shadow:0 6px 30px rgba(0,0,0,0.6), inset 0 -2px 6px rgba(255,255,255,0.02);
+    .card {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      padding: 20px;
+      box-sizing: border-box;
     }
 
-    .time{
-      font-size:clamp(48px,12vw,120px);
-      line-height:0.92;
-      letter-spacing:1px;
-      font-weight:900;
-      color:var(--fg);
-      text-shadow:0 6px 30px rgba(0,0,0,0.8);
-      margin:0 0 12px 0;
-      font-family: 'Segoe UI', Roboto, Inter, system-ui, -apple-system;
-      text-align:center;
+    .clock {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.03);
+      border-radius: 0;
     }
 
-    .label{font-size:14px;color:var(--muted);margin-bottom:10px;text-align:center;}
-
-    .controls{
-      display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px;
-      flex-direction:row;
+    .time {
+      font-size: clamp(48px, 14vw, 120px);
+      font-weight: 900;
+      line-height: 1;
+      color: var(--fg);
+      text-shadow: 0 6px 30px rgba(0,0,0,0.8);
+      margin: 10px 0;
     }
 
-    button, input[type=number]{
-      background:#111;
-      color:var(--fg);
-      border:1px solid rgba(255,255,255,0.06);
-      padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer;
+    .label { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+
+    .set-area, .controls, .quick {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
     }
 
-    button.primary{background:var(--accent);color:#010101;border:none}
-    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
-
-    .set-area{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:18px;flex-wrap:wrap;}
-    .set-area input{width:84px;text-align:center;font-size:18px}
-    .small{font-size:12px;padding:8px 10px}
-
-    .quick{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
-    .meta{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;}
-
-    @media (max-width:800px) and (orientation:landscape){
-      body{
-        flex-direction:row;
-        justify-content:space-around;
-        align-items:center;
-        padding:10px;
-      }
-      .card{
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-        width:auto;
-      }
-      .clock{
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-        width:100%;
-        max-width:none;
-      }
-      .set-area, .controls, .quick{
-        flex-direction:column;
-        align-items:center;
-      }
+    button, input[type=number] {
+      background: #111;
+      color: var(--fg);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
     }
 
-    @media (max-width:600px) and (orientation:portrait){
-      body{
-        flex-direction:column;
-        justify-content:flex-start;
-        padding-top:40px;
-      }
-      .card{
-        width:100%;
-        padding:16px;
-      }
-      .clock{
-        padding:24px 18px;
-        width:100%;
-      }
-      .time{font-size:clamp(36px,18vw,72px)}
-      .set-area{flex-direction:column;align-items:center;}
-      .controls{flex-direction:column;gap:12px;}
-      .quick{justify-content:center;}
+    button.primary { background: var(--accent); color: #010101; border: none; }
+    button.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.06); }
+
+    .meta { color: var(--muted); font-size: 13px; text-align: center; margin-top: 10px; }
+
+    /* Landscape Mobile: Fullscreen, vertical stacking */
+    @media (max-width: 900px) and (orientation: landscape) {
+      html, body { height: 100vh; overflow: hidden; }
+      .card, .clock { height: 100vh; width: 100vw; border-radius: 0; }
+      .clock { flex-direction: column; justify-content: space-evenly; }
+      .time { font-size: clamp(48px, 18vw, 140px); }
+      .set-area, .controls, .quick { flex-direction: column; gap: 14px; }
+      button, input[type=number] { font-size: 16px; }
+    }
+
+    /* Portrait Mobile */
+    @media (max-width: 600px) and (orientation: portrait) {
+      html, body { height: 100vh; overflow: hidden; }
+      .card, .clock { height: 100vh; width: 100vw; border-radius: 0; }
+      .clock { justify-content: space-evenly; }
+      .time { font-size: clamp(48px, 20vw, 120px); }
+      .set-area, .controls, .quick { flex-direction: column; gap: 12px; }
+      button, input[type=number] { font-size: 16px; }
     }
   </style>
 </head>
 <body>
-  <main class="card" role="main">
+  <main class="card">
     <div class="clock" aria-live="polite">
       <p class="label">Work timer — set how many hours you worked and start the countdown</p>
       <div id="display" class="time">00:00:00</div>
 
-      <div class="set-area" aria-hidden="false">
+      <div class="set-area">
         <label style="color:var(--muted);font-weight:700;">Hours:</label>
         <input id="hours" type="number" min="0" max="999" value="1" />
         <label style="color:var(--muted);font-weight:700;">Minutes:</label>
@@ -170,12 +145,9 @@
     const add60 = document.getElementById('add60');
     const status = document.getElementById('status');
 
-    let duration = 0; 
-    let remaining = 0;
-    let timer = null;
-    let running = false;
+    let duration = 0, remaining = 0, timer = null, running = false;
 
-    function fmt(s){
+    function fmt(s) {
       s = Math.max(0, Math.floor(s));
       const hh = String(Math.floor(s/3600)).padStart(2,'0');
       const mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
@@ -183,14 +155,12 @@
       return `${hh}:${mm}:${ss}`;
     }
 
-    function render(){
+    function render() {
       display.textContent = fmt(remaining);
-      if(!running && remaining === 0) status.textContent = 'Ready — set a duration and press Start.';
-      else if(!running) status.textContent = 'Paused.';
-      else status.textContent = 'Running...';
+      status.textContent = !running && remaining === 0 ? 'Ready — set a duration and press Start.' : running ? 'Running...' : 'Paused.';
     }
 
-    function setDurationFromInputs(){
+    function setDurationFromInputs() {
       const h = parseInt(hoursInput.value) || 0;
       const m = parseInt(minutesInput.value) || 0;
       duration = h*3600 + m*60;
@@ -198,82 +168,79 @@
       render();
     }
 
-    setBtn.addEventListener('click', ()=>{
+    setBtn.addEventListener('click', () => {
       setDurationFromInputs();
       running = false;
       clearInterval(timer);
       timer = null;
     });
 
-    startBtn.addEventListener('click', ()=>{
-      if(remaining <= 0){
+    startBtn.addEventListener('click', () => {
+      if (remaining <= 0) {
         setDurationFromInputs();
-        if(remaining <= 0){
-          status.textContent = 'Set a duration greater than 0.';return;
+        if (remaining <= 0) {
+          status.textContent = 'Set a duration greater than 0.';
+          return;
         }
       }
-      if(running) return;
+      if (running) return;
       running = true;
       status.textContent = 'Running...';
-      const startTs = Date.now();
-      let last = startTs;
-      timer = setInterval(()=>{
+      let last = Date.now();
+      timer = setInterval(() => {
         const now = Date.now();
-        const dt = Math.round((now - last)/1000);
-        if(dt>0) {
+        const dt = Math.round((now - last) / 1000);
+        if (dt > 0) {
           remaining -= dt;
           last = now;
         }
-        if(remaining <= 0){
+        if (remaining <= 0) {
           remaining = 0; render();
-          clearInterval(timer); timer = null; running=false;
+          clearInterval(timer); timer = null; running = false;
           status.textContent = 'Done — timer reached zero.';
           flashDone();
-        } else {
-          render();
-        }
+        } else render();
       }, 250);
     });
 
-    pauseBtn.addEventListener('click', ()=>{
-      if(timer) clearInterval(timer);
-      timer = null; running = false; render();
-    });
+    pauseBtn.addEventListener('click', () => { clearInterval(timer); timer = null; running = false; render(); });
+    resetBtn.addEventListener('click', () => { clearInterval(timer); timer = null; running = false; remaining = duration; render(); });
+    add15.addEventListener('click', () => { remaining += 900; duration += 900; render(); });
+    add30.addEventListener('click', () => { remaining += 1800; duration += 1800; render(); });
+    add60.addEventListener('click', () => { remaining += 3600; duration += 3600; render(); });
 
-    resetBtn.addEventListener('click', ()=>{
-      if(timer) clearInterval(timer);
-      timer = null; running=false; remaining = duration; render();
-    });
-
-    add15.addEventListener('click', ()=>{ remaining += 15*60; duration += 15*60; render(); });
-    add30.addEventListener('click', ()=>{ remaining += 30*60; duration += 30*60; render(); });
-    add60.addEventListener('click', ()=>{ remaining += 60*60; duration += 60*60; render(); });
-
-    function flashDone(){
+    function flashDone() {
       const orig = display.style.color;
-      let t=0;
-      const id = setInterval(()=>{
-        display.style.color = t%2? '#000' : '#fff';
-        display.style.background = t%2? '#fff' : 'transparent';
-        t++; if(t>6){clearInterval(id); display.style.color=orig; display.style.background='transparent';}
-      },180);
-      try{
-        const ctx = new (window.AudioContext||window.webkitAudioContext)();
+      let t = 0;
+      const id = setInterval(() => {
+        display.style.color = t % 2 ? '#000' : '#fff';
+        display.style.background = t % 2 ? '#fff' : 'transparent';
+        t++;
+        if (t > 6) {
+          clearInterval(id);
+          display.style.color = orig;
+          display.style.background = 'transparent';
+        }
+      }, 180);
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const o = ctx.createOscillator();
         const g = ctx.createGain();
-        o.type='sine'; o.frequency.value=880; g.gain.value=0.02; o.connect(g); g.connect(ctx.destination); o.start(); setTimeout(()=>{o.stop();ctx.close();},280);
-      }catch(e){}
+        o.type = 'sine';
+        o.frequency.value = 880;
+        g.gain.value = 0.02;
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.start();
+        setTimeout(() => { o.stop(); ctx.close(); }, 280);
+      } catch(e) {}
     }
 
-    (function init(){
-      setDurationFromInputs();
-      render();
-    })();
-
-    window.addEventListener('keydown',(e)=>{
-      if(e.code === 'Space'){ e.preventDefault(); if(running) pauseBtn.click(); else startBtn.click(); }
-      if(e.key === 'r' || e.key === 'R') resetBtn.click();
-      if(e.key === '+') add15.click();
+    (function init() { setDurationFromInputs(); render(); })();
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space') { e.preventDefault(); if (running) pauseBtn.click(); else startBtn.click(); }
+      if (e.key === 'r' || e.key === 'R') resetBtn.click();
+      if (e.key === '+') add15.click();
     });
   </script>
 </body>
